@@ -4,6 +4,19 @@
 #![no_main]
 #![feature(global_asm)]
 #![feature(llvm_asm)]
+#![feature(panic_info_message)]
+
+use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    if let Some(location) = info.location() {
+        println!("Panicked at {}:{} {}", location.file(), location.line(), info.message().unwrap());
+    } else {
+        println!("Panicked: {}", info.message().unwrap());
+    }
+    shutdown()
+}
 
 mod lang_items;
 mod sbi;
@@ -98,8 +111,6 @@ fn clear_bss() {
     });
 }
 
-
-
 // #[no_mangle]
 // extern "C" fn _start() {
 //     println!("Hello World");
@@ -110,5 +121,5 @@ fn clear_bss() {
 #[no_mangle]
 pub fn rust_main() -> ! {
     println!("Hello World");
-    shutdown();
+    panic!("It should shutdown!");
 }
