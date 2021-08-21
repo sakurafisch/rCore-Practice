@@ -2,7 +2,7 @@
 
 ```zsh
 cargo build --target riscv64gc-unknown-none-elf
-qemu-riscv64 target/riscv64gc-unknown-none-elf/debug/os; echo $?
+qemu-riscv64 os/target/riscv64gc-unknown-none-elf/debug/os; echo $?
 ```
 
 ```zsh
@@ -11,7 +11,7 @@ qemu-system-riscv64 \
 -machine virt \
 -nographic \
 -bios ./bootloader/rustsbi-qemu.bin \
--device loader,file=target/riscv64gc-unknown-none-elf/debug/os,addr=0x80200000
+-device loader,file=os/target/riscv64gc-unknown-none-elf/debug/os,addr=0x80200000
 ```
 
 ## 阅读记录
