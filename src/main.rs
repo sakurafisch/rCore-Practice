@@ -2,7 +2,20 @@
 #![test_runner(crate::test_runner)]
 #![no_std]
 #![no_main]
+#![feature(global_asm)]
 #![feature(llvm_asm)]
+
+mod lang_items;
+mod sbi;
+
+global_asm!(include_str!("entry.asm"));
+
+use core::fmt::{self, Write};
+use sbi::sbi_call;
+
+const SYSCALL_EXIT: usize = 93;
+const SYSCALL_WRITE: usize = 64;
+const SBI_SHUTDOWN: usize = 8;
 
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
@@ -11,13 +24,6 @@ fn test_runner(tests: &[&dyn Fn()]) {
         test();
     }
 }
-
-mod lang_items;
-
-use core::fmt::{self, Write};
-
-const SYSCALL_EXIT: usize = 93;
-const SYSCALL_WRITE: usize = 64;
 
 fn syscall(id: usize, args: [usize; 3]) -> isize {
     let mut ret: isize;
@@ -34,6 +40,11 @@ fn syscall(id: usize, args: [usize; 3]) -> isize {
 
 pub fn sys_exit(xstate: i32) -> isize {
     syscall(SYSCALL_EXIT, [xstate as usize, 0, 0])
+}
+
+pub fn shutdown() -> ! {
+    sbi_call(SBI_SHUTDOWN, 0, 0, 0);
+    panic!("It should shutdown!");
 }
 
 pub fn sys_write(fd: usize, buffer: &[u8]) -> isize {
@@ -67,8 +78,14 @@ macro_rules! println {
     }
 }
 
+// #[no_mangle]
+// extern "C" fn _start() {
+//     println!("Hello World");
+//     shutdown();
+//     // sys_exit(9);
+// }
+
 #[no_mangle]
-extern "C" fn _start() {
-    println!("Hello World");
-    sys_exit(9);
+pub fn rust_main() -> ! {
+    shutdown();
 }
